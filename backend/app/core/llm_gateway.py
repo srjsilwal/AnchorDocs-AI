@@ -12,6 +12,7 @@ settings = get_settings()
 litellm.success_callback = ['langfuse_otel']
 litellm.failure_callback = ['langfuse_otel']
 litellm.drop_params = True
+litellm.enable_json_schema_validation = True
 
 # define our multi-provider model registry
 MODEL_LIST = [
@@ -63,18 +64,23 @@ async def generate_completion(
         messages: list[dict],
         model_group: str = 'primary-chat',
         temperature: float = 0.2,
-        metadata: dict | None = None
+        metadata: dict | None = None,        response_format: type | dict | None = None
 ) -> dict:
     """
     Unified async gateway call with automatic fallback and langfuse trace metadata
     """
 
-    response = await llm_router.acompletion(
-        model = model_group,
-        messages=messages,
-        temperature=temperature,
-        metadata=metadata or {}
-    )
+    kwargs = {
+        "model": model_group,
+        "messages": messages,
+        "temperature": temperature,
+        "metadata": metadata or {},
+       }
+    
+    if response_format is not None:
+        kwargs["response_format"] = response_format
+
+    response = await llm_router.acompletion(**kwargs)
 
     choice = response.choices[0].message.content
     actual_model = response.model
