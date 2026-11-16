@@ -1,7 +1,7 @@
 [project]
-name = "backend"
+name = "anchordocs"
 version = "0.1.0"
-description = "Add your description here"
+description = "AnchorDocs document safety and AI gateway service"
 readme = "README.md"
 authors = [
     { name = "srjsilwal", email = "s6007118@gmail.com" }
