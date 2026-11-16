@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     # App Metadata
-    APP_NAME: str= 'DocumentGuard AI'
+    APP_NAME: str = 'AnchorDocs'
     ENVIRONMENT: str = 'development'
 
     # LLM Provider Keys
