@@ -19,7 +19,7 @@ from app.rag.vector_store import get_supabase_client, get_vector_store
 from app.core.llm_gateway import generate_completion
 
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_sizes=800,
+    chunk_size=800,
     chunk_overlap=150,
     separators=['\n\n', '\n', '. ', ' ', '']
 )
@@ -69,7 +69,7 @@ async def ingest_document(file_bytes: bytes, filename:str, workspace_id: str, co
         raise ValueError("No readable text could be extracted from the uploaded file.")
 
     all_chunks: list[Document] = []
-    chunk_ids = list[str] = []
+    chunk_ids: list[str] = []
 
     for page_num, page_text in pages:
         splits = text_splitter.split_text(page_text)

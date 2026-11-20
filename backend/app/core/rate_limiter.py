@@ -17,7 +17,7 @@ rate_limiter = Ratelimit(
         max_requests=settings.RATE_LIMIT_REQUESTS,
         window=settings.RATE_LIMIT_WINDOW_SECONDS
     ),
-    prefix='documentguard:ratelimit'
+    prefix='anchordocs:ratelimit'
 )
 
 def enforce_rate_limit(identifier:str) -> dict:
