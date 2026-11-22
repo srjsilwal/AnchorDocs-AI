@@ -8,10 +8,86 @@ from app.guardrails.output_guard import GroundAnswer, parse_and_verify_output
 from app.rag.ingest import ingest_document
 from app.rag.retriever import retrieve_vector_chunks, retrieve_vectorless_summaries
 
+from contextlib import asynccontextmanager
+from fastapi.middleware.cors import CORSMiddleware
+from langchain_core.messages import HumanMessage
+from app.agents.graph import init_agent_graph, close_agent_graph, get_agent_graph
+
 settings = get_settings()
 
-app = FastAPI(title=settings.APP_NAME, version='0.2.0')
+@asynccontextmanager
+async def lifespan(app:FastAPI):
+    await init_agent_graph()
+    yield
+    await close_agent_graph()
 
+
+
+app = FastAPI(title=settings.APP_NAME, version='0.4.0', lifespan=lifespan)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['http://localhost:3000'],
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*']
+)
+
+class ChatRequest(BaseModel):
+    query: str
+    thread_id: str = 'default-thread'
+
+@app.post('/api/v1/chat')
+async def chat_with_docs(
+    payload: ChatRequest,
+    response: Response,
+    x_workspace_id: str = Header(default='demo-workspace')
+):
+    rl_headers = enforce_rate_limit(x_workspace_id)
+    for k,v in rl_headers.items():
+        response.headers[k] = v
+
+    # input guadrails(injection block and pii redaction)
+    try:
+        sanitized = run_input_guardrails(payload.query)
+    except SecurityViolationError as sec_err:
+        raise HTTPException(
+            status_code = status.HTTP_400_BAD_REQUEST,
+            detail={
+                'error': 'SecurityGuadrailsBlocked',
+                'reason': sec_err.reason,
+                'rule': sec_err.matched_rules
+            }
+        )
+
+    # run langgraph agent with persistent supabase thread memory
+    graph = get_agent_graph()
+
+    #scoped thread_id by workspace_id so threads are striclty multi-tenant isolated
+    scoped_thread_id = f"{x_workspace_id}:{payload.thread_id}"
+
+    result_state= await graph.ainvoke(
+        {
+            "messages": [HumanMessage(content=sanitized.clean_text)],
+            "workspace_id": x_workspace_id,
+            "original_query": sanitized.clean_text,
+        },
+        config={'configurable': {'thread_id':scoped_thread_id}}
+    )
+
+    final_payload=result_state['final_response']
+    return {
+        "workspace_id": x_workspace_id,
+        "thread_id": payload.thread_id,
+        "input_sanitized": sanitized.was_modified,
+        "redacted_categories": sanitized.redacted_categories,
+        "query_rewritten_to": result_state.get("search_query"),
+        "retries_used": result_state.get("retry_count", 0),
+        **final_payload,
+    }
+
+       
 
 class GuardedTestRequest(BaseModel):
     prompt: str
