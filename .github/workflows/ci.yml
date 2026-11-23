@@ -42,7 +42,6 @@ jobs:
         run: uv run pytest -v
 
       - name: Run Automated RAG & Faithfulness Eval Gate
-        if: ${{ secrets.GOOGLE_API_KEY != '' }}
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
@@ -56,4 +55,9 @@ jobs:
           LANGFUSE_BASE_URL: ${{ secrets.LANGFUSE_BASE_URL }}
           LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
           LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
-        run: uv run python -m app.evals.evaluator
+        run: |
+          if [ -z "$GOOGLE_API_KEY" ]; then
+            echo "GOOGLE_API_KEY is not configured; skipping external RAG evaluation."
+            exit 0
+          fi
+          uv run python -m app.evals.evaluator
