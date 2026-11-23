@@ -7,6 +7,7 @@ from app.guardrails.input_guard import run_input_guardrails, SecurityViolationEr
 from app.guardrails.output_guard import GroundAnswer, parse_and_verify_output
 from app.rag.ingest import ingest_document
 from app.rag.retriever import retrieve_vector_chunks, retrieve_vectorless_summaries
+from app.rag.vector_store import get_supabase_client
 
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
@@ -191,6 +192,22 @@ async def list_workspace_documents(
 ):
     docs = retrieve_vectorless_summaries(x_workspace_id)
     return {'workspace_id': x_workspace_id, 'documents': docs}
+
+@app.get('/api/v1/documents/{doc_id}/preview')
+async def get_document_preview(
+    doc_id: str,
+    x_workspace_id: str = Header(default='demo-workspace'),
+):
+    result = get_supabase_client().table('doc_summaries').select(
+        'filename, storage_path, page_count, summary'
+    ).eq('workspace_id', x_workspace_id).eq('doc_id', doc_id).limit(1).execute()
+    if not result.data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Document not found.')
+    document = result.data[0]
+    signed = get_supabase_client().storage.from_('documents').create_signed_url(
+        document['storage_path'], 3600
+    )
+    return {**document, 'url': signed.get('signedURL') or signed.get('signedUrl')}
 
 @app.get('/api/v1/documents/search')
 async def test_retrieval(
