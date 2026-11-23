@@ -6,6 +6,7 @@ from app.agents.state import AgentState
 from app.core.llm_gateway import generate_completion
 from app.rag.retriever import retrieve_vector_chunks, retrieve_vectorless_summaries
 from app.guardrails.output_guard import GroundAnswer, parse_and_verify_output
+from app.core.prompt_manager import get_versioned_prompt
 
 
 async def route_query_node(state: AgentState) -> dict:
@@ -160,12 +161,8 @@ async def generate_answer_node(state: AgentState) -> dict:
             "messages": [AIMessage(content=refusal["answer"])],
         }
     else:
-        system_prompt = (
-            "You are AnchorDocs, an enterprise document assistant. Answer the user's question "
-            "using ONLY the provided context chunks. Every factual claim MUST cite the exact `chunk_id` "
-            "from the context. If the context does not contain the answer, set confidence to "
-            "'insufficient_evidence' and state clearly what is missing."
-        )
+        versioned_prompt = get_versioned_prompt('anchordocs-grounded-qa', label='production')
+        system_prompt = versioned_prompt.template
         context_block = "\n\n".join(
             f"[chunk_id: {c['chunk_id']} | file: {c['filename']} | page: {c['page']}]\n{c['content']}"
             for c in chunks
@@ -193,7 +190,7 @@ async def generate_answer_node(state: AgentState) -> dict:
         metadata={
             "trace_name": "agent-generator",
             "workspace_id": state["workspace_id"],
-            "route": route,
+            "route": route, "prompt_version":versioned_prompt.version
         },
     )
 

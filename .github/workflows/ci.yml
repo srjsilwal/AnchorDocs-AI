@@ -1,0 +1,55 @@
+# Automated CI/CD Quality Gate
+
+name: AnchorDocs AI CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_requests:
+    branches: [main]
+
+jobs:
+   test-and-eval:
+      runs-on: ubuntu-latest
+      defaults:
+        run:
+          working-directory: ./backend
+      
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - name: Install uv
+          uses: astral-sh/setup-uv@v4
+
+        - name: Install Python 3.11 & dependencies
+          run: uv sync
+
+        - name: Run Deterministic Guardrail Unit Tests
+          env:
+           GOOGLE_API_KEY: "dummy-for-unit-tests"
+           GROQ_API_KEY: "dummy-for-unit-tests"
+           SUPABASE_URL: "https://example.supabase.co"
+           SUPABASE_KEY: "dummy"
+           SUPABASE_DB_URL: "postgresql://user:pass@localhost:5432/db"
+           UPSTASH_REDIS_REST_URL: "https://example.upstash.io"
+           UPSTASH_REDIS_REST_TOKEN: "dummy"
+           LANGFUSE_PUBLIC_KEY: "pk-lf-dummy"
+           LANGFUSE_SECRET_KEY: "sk-lf-dummy"
+          run: uv run pytest -v
+
+        - name: Run Automated RAG & Faithfulness Eval Gate
+          if: ${{ secrets.GOOGLE_API_KEY != '' }}
+          env:
+            GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+            GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+            OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+            SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+            SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+            SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+            UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+            UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+            LANGFUSE_BASE_URL: ${{ secrets.LANGFUSE_BASE_URL }}
+            LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+            LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          run: uv run python -m app.evals.evaluator

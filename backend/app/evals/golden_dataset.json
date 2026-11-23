@@ -1,0 +1,44 @@
+[
+  {
+    "id": "eval-01-grounded-fact",
+    "query": "What is the maximum file upload size allowed by AnchorDocs?",
+    "mock_chunks": [
+      {
+        "chunk_id": "doc_spec:p1:c0",
+        "filename": "architecture_spec.md",
+        "page": 1,
+        "content": "AnchorDocs enforces a strict 10 MB maximum file upload size to protect backend worker memory. Supported formats are .pdf, .md, and .txt."
+      }
+    ],
+    "expected_answer_points": "10 MB maximum file upload size",
+    "expect_refusal": false
+  },
+  {
+    "id": "eval-02-hallucination-refusal",
+    "query": "What is AnchorDocs' enterprise pricing tier per seat?",
+    "mock_chunks": [
+      {
+        "chunk_id": "doc_spec:p1:c0",
+        "filename": "architecture_spec.md",
+        "page": 1,
+        "content": "AnchorDocs enforces a strict 10 MB maximum file upload size to protect backend worker memory. Supported formats are .pdf, .md, and .txt."
+      }
+    ],
+    "expected_answer_points": "Insufficient evidence / not mentioned in context",
+    "expect_refusal": true
+  },
+  {
+    "id": "eval-03-rate-limit-policy",
+    "query": "How many requests per minute are permitted per workspace?",
+    "mock_chunks": [
+      {
+        "chunk_id": "doc_sec:p2:c1",
+        "filename": "security_runbook.pdf",
+        "page": 2,
+        "content": "Edge rate limiting uses an Upstash Redis sliding window configured to 10 requests per 60 seconds per workspace_id."
+      }
+    ],
+    "expected_answer_points": "10 requests per 60 seconds",
+    "expect_refusal": false
+  }
+]
