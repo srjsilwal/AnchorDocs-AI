@@ -1,12 +1,12 @@
-# DocumentGuard
+# AnchorDocs
 
 > An AI-assisted document intelligence and safety layer that helps teams understand, review, and trust high-stakes documents before they are shared, approved, or acted upon.
 
-DocumentGuard brings retrieval-grounded AI, policy guardrails, and observable evaluation into one workflow. Instead of asking a general-purpose model to "read this document," users get answers backed by the source, safety checks around sensitive actions, and a review trail that makes the result easier to verify.
+AnchorDocs brings retrieval-grounded AI, policy guardrails, and observable evaluation into one workflow. Instead of asking a general-purpose model to "read this document," users get answers backed by the source, safety checks around sensitive actions, and a review trail that makes the result easier to verify.
 
 ## What it is
 
-DocumentGuard is a workspace for working safely with business documents such as contracts, policies, reports, onboarding material, compliance evidence, and internal knowledge bases.
+AnchorDocs is a workspace for working safely with business documents such as contracts, policies, reports, onboarding material, compliance evidence, and internal knowledge bases.
 
 It is designed to:
 
@@ -26,13 +26,13 @@ This creates practical industry problems:
 
 | Industry problem | Consequence | How DocumentGuard addresses it |
 | --- | --- | --- |
-| Knowledge is buried in long, scattered documents | Slow reviews and missed details | Retrieval finds the most relevant passages before generating an answer. |
+| Knowledge is buried in long, scattered documents | Slow reviews and missed details | AnchorDocs retrieval finds the most relevant passages before generating an answer. |
 | AI can hallucinate or use the wrong source | Bad decisions, compliance exposure | Responses are grounded in retrieved context and presented with citations. |
 | Sensitive data can be exposed through prompts or outputs | Privacy and security risk | Guardrails inspect inputs and outputs, apply policies, and block or redact unsafe content. |
 | Policies change faster than teams can absorb them | Inconsistent decisions | A shared, queryable document layer keeps guidance accessible and traceable. |
 | AI quality is hard to prove | Low trust and difficult governance | Evaluations track correctness, grounding, safety, and latency against repeatable test cases. |
 
-This is especially useful for legal, finance, healthcare, insurance, HR, operations, and regulated SaaS teams—anywhere that documents influence a consequential decision.
+AnchorDocs is especially useful for legal, finance, healthcare, insurance, HR, operations, and regulated SaaS teams—anywhere that documents influence a consequential decision.
 
 ## How it works
 
@@ -72,7 +72,7 @@ User question ──► Input guardrail ─► Retrieval ─► Orchestrated AI 
 
 ## Architecture
 
-DocumentGuard separates the user experience, application services, AI orchestration, and data/quality layers. This keeps the safety and governance mechanisms independent from the chat interface.
+AnchorDocs separates the user experience, application services, AI orchestration, and data/quality layers. This keeps the safety and governance mechanisms independent from the chat interface.
 
 ```text
 ┌──────────────────────┐
@@ -124,7 +124,7 @@ DocumentGuard separates the user experience, application services, AI orchestrat
 
 RAG combines information retrieval with language generation. A document is converted into searchable chunks; when someone asks a question, the system retrieves the chunks most relevant to it and includes them as evidence for the model.
 
-For DocumentGuard, RAG helps ensure an answer such as “What is the termination notice period?” comes from the actual agreement, not an invented or stale answer. Good RAG depends on clean extraction, sensible chunk sizes, metadata filters, retrieval quality, and citation-aware prompting.
+For AnchorDocs, RAG helps ensure an answer such as “What is the termination notice period?” comes from the actual agreement, not an invented or stale answer. Good RAG depends on clean extraction, sensible chunk sizes, metadata filters, retrieval quality, and citation-aware prompting.
 
 ### Guardrails
 
@@ -150,7 +150,7 @@ In this kind of system, it provides reusable building blocks for the RAG pipelin
 
 LangGraph is used for stateful, multi-step AI workflows. It models the workflow as a graph: each node does a focused job and edges decide what happens next.
 
-For example, a DocumentGuard graph may validate a question, retrieve evidence, generate a draft, verify grounding, and either return the answer or route it to a retry/review path. This is more reliable than a single, opaque prompt because the decision points are explicit, inspectable, and recoverable.
+For example, an AnchorDocs graph may validate a question, retrieve evidence, generate a draft, verify grounding, and either return the answer or route it to a retry/review path. This is more reliable than a single, opaque prompt because the decision points are explicit, inspectable, and recoverable.
 
 ```text
 Validate request → Retrieve sources → Draft answer → Verify evidence
@@ -163,7 +163,7 @@ Validate request → Retrieve sources → Draft answer → Verify evidence
 
 ### Evals — AI evaluation
 
-Evals are repeatable tests for AI behavior. Unit tests alone cannot show whether a retrieval answer is accurate, grounded, or safe, so DocumentGuard should maintain a representative set of document questions and expected properties.
+Evals are repeatable tests for AI behavior. Unit tests alone cannot show whether a retrieval answer is accurate, grounded, or safe, so AnchorDocs should maintain a representative set of document questions and expected properties.
 
 Useful evaluation dimensions include:
 
@@ -201,7 +201,7 @@ Then open the local URL reported by the development server. Refer to `frontend/R
 
 ## Responsible use
 
-DocumentGuard is a decision-support system, not a replacement for legal, medical, financial, compliance, or security professionals. For high-impact decisions, review the cited source material and retain appropriate human approval steps.
+AnchorDocs is a decision-support system, not a replacement for legal, medical, financial, compliance, or security professionals. For high-impact decisions, review the cited source material and retain appropriate human approval steps.
 
 ## Roadmap ideas
 
@@ -214,4 +214,4 @@ DocumentGuard is a decision-support system, not a replacement for legal, medical
 
 ---
 
-Built around a simple promise: **faster document intelligence without giving up evidence, safety, or accountability.**
+AnchorDocs is built around a simple promise: **faster document intelligence without giving up evidence, safety, or accountability.**
