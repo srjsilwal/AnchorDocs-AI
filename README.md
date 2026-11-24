@@ -178,7 +178,7 @@ Run evals whenever prompts, models, chunking, retrieval settings, or guardrails 
 
 ## Screenshots
 
-Add images to `docs/screenshots/` and replace the placeholder paths below when they are available.
+ images will be added to `docs/screenshots/` and  placeholder will be replaced by paths below when they are available.
 
 | Area | Screenshot |
 | --- | --- |
