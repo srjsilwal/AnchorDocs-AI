@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, FileText, LoaderCircle, Plus, Upload, X } from "lucide-react";
+import { ChevronDown, FileText, LoaderCircle, Plus, Trash2, Upload, X } from "lucide-react";
 import Link from "next/link";
 import { useState, type ChangeEvent } from "react";
 import type { WorkspaceDoc } from "@/lib/api";
@@ -19,9 +19,11 @@ interface WorkspaceSidebarProps {
   documents: WorkspaceDoc[];
   documentsLoading: boolean;
   uploading: boolean;
+  deletingDocumentId: string | null;
   error: string | null;
   onDismissError: () => void;
   onUploadFile: (file: File) => void;
+  onDeleteDocument: (docId: string) => Promise<void>;
   onOpenDocument: (docId: string) => Promise<string | null>;
 }
 
@@ -41,9 +43,11 @@ export function WorkspaceSidebar({
   documents,
   documentsLoading,
   uploading,
+  deletingDocumentId,
   error,
   onDismissError,
   onUploadFile,
+  onDeleteDocument,
   onOpenDocument,
 }: WorkspaceSidebarProps) {
   const [documentError, setDocumentError] = useState<string | null>(null);
@@ -58,6 +62,15 @@ export function WorkspaceSidebar({
     setDocumentError(null);
     const message = await onOpenDocument(docId);
     setDocumentError(message);
+  };
+
+  const handleDeleteDocument = async (document: WorkspaceDoc) => {
+    const confirmed = window.confirm(
+      `Delete "${document.filename}"? This will permanently remove the document.`,
+    );
+    if (!confirmed) return;
+    setDocumentError(null);
+    await onDeleteDocument(document.doc_id);
   };
 
   const conversations = threads.filter((thread) => thread.turns.length > 0);
@@ -163,12 +176,12 @@ export function WorkspaceSidebar({
         ) : documents.length ? (
           <ul className="m-0 flex list-none flex-col gap-px p-0">
             {documents.map((document) => (
-              <li key={document.doc_id}>
+              <li key={document.doc_id} className="group flex items-center">
                 <button
                   type="button"
                   onClick={() => void handleOpenDocument(document.doc_id)}
                   title={document.filename}
-                  className={cn(rowClass, rowIdleClass)}
+                  className={cn(rowClass, rowIdleClass, "min-w-0 flex-1")}
                 >
                   <FileText
                     className="size-[15px] shrink-0 text-muted"
@@ -179,6 +192,20 @@ export function WorkspaceSidebar({
                   <span className="shrink-0 text-[12px] text-muted">
                     {document.page_count}
                   </span>
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Delete ${document.filename}`}
+                  title={`Delete ${document.filename}`}
+                  onClick={() => void handleDeleteDocument(document)}
+                  disabled={deletingDocumentId !== null}
+                  className="grid size-[30px] shrink-0 place-items-center rounded-[6px] text-muted opacity-0 transition-colors hover:bg-danger-soft hover:text-danger focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-danger group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {deletingDocumentId === document.doc_id ? (
+                    <LoaderCircle className="size-[14px] animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Trash2 className="size-[14px]" strokeWidth={1.8} aria-hidden="true" />
+                  )}
                 </button>
               </li>
             ))}

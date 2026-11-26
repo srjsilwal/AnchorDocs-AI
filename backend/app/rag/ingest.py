@@ -19,8 +19,8 @@ from app.rag.vector_store import get_supabase_client, get_vector_store
 from app.core.llm_gateway import generate_completion
 
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=800,
-    chunk_overlap=150,
+    chunk_size=1200,
+    chunk_overlap=200,
     separators=['\n\n', '\n', '. ', ' ', '']
 )
 

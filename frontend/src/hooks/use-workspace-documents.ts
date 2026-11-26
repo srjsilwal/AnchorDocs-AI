@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import {
+  deleteDocument,
   fetchDocuments,
   uploadDocument,
   type WorkspaceDoc,
@@ -24,6 +25,7 @@ export function useWorkspaceDocuments(workspaceId: string) {
     status: "loading",
   });
   const [uploading, setUploading] = useState(false);
+  const [deletingDocumentId, setDeletingDocumentId] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -82,6 +84,31 @@ export function useWorkspaceDocuments(workspaceId: string) {
     [workspaceId],
   );
 
+  const remove = useCallback(
+    async (docId: string) => {
+      setDeletingDocumentId(docId);
+      setUploadError(null);
+      try {
+        await deleteDocument(workspaceId, docId);
+        const documentsAfterDelete = await fetchDocuments(workspaceId);
+        setStore({
+          workspaceId,
+          documents: documentsAfterDelete,
+          status: "ready",
+        });
+      } catch (deleteFailure) {
+        setUploadError(
+          deleteFailure instanceof Error
+            ? deleteFailure.message
+            : "The document could not be deleted.",
+        );
+      } finally {
+        setDeletingDocumentId(null);
+      }
+    },
+    [workspaceId],
+  );
+
   const dismissError = useCallback(() => {
     setUploadError(null);
     setStore((current) =>
@@ -93,8 +120,10 @@ export function useWorkspaceDocuments(workspaceId: string) {
     documents,
     loading,
     uploading,
+    deletingDocumentId,
     error: uploadError ?? loadError,
     upload,
+    remove,
     dismissError,
   };
 }

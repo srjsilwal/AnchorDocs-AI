@@ -6,7 +6,7 @@ from app.core.llm_gateway import generate_completion
 from app.guardrails.input_guard import run_input_guardrails, SecurityViolationError
 from app.guardrails.output_guard import GroundAnswer, parse_and_verify_output
 from app.rag.ingest import ingest_document
-from app.rag.retriever import retrieve_vector_chunks, retrieve_vectorless_summaries
+from app.rag.retriever import retrieve_vector_chunks, delete_workspace_document, retrieve_vectorless_summaries
 from app.rag.vector_store import get_supabase_client
 
 from contextlib import asynccontextmanager
@@ -29,7 +29,7 @@ app = FastAPI(title=settings.APP_NAME, version='0.4.0', lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['http://localhost:3000'],
+    allow_origins=['http://localhost:3000', settings.FRONTEND_URL],
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*']
@@ -217,4 +217,17 @@ async def test_retrieval(
 ):
     chunks = retrieve_vector_chunks(query, x_workspace_id, k)
     return {"workspace_id": x_workspace_id, "query": query, "results": chunks}
+
+
+@app.delete("/api/v1/documents/{doc_id}")
+async def remove_document(
+    doc_id: str,
+    x_workspace_id: str = Header(default="demo-workspace"),
+):
+    deleted = delete_workspace_document(
+        doc_id=doc_id, workspace_id=x_workspace_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=404, detail="Document not found in workspace.")
+    return {"status": "deleted", "doc_id": doc_id}
 

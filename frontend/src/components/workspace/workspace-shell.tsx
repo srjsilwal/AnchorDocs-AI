@@ -29,8 +29,10 @@ export default function WorkspaceShell() {
     documents,
     loading: documentsLoading,
     uploading,
+    deletingDocumentId,
     error: documentsError,
     upload,
+    remove: removeDocument,
     dismissError,
   } = useWorkspaceDocuments(workspaceId);
 
@@ -168,9 +170,11 @@ export default function WorkspaceShell() {
         documents={documents}
         documentsLoading={documentsLoading}
         uploading={uploading}
+        deletingDocumentId={deletingDocumentId}
         error={documentsError}
         onDismissError={dismissError}
         onUploadFile={handleUpload}
+        onDeleteDocument={removeDocument}
         onOpenDocument={openDocument}
       />
 

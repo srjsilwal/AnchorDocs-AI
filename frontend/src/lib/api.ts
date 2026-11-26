@@ -69,6 +69,19 @@ export async function uploadDocument(workspaceId: string, file: File) {
   return data;
 }
 
+export async function deleteDocument(workspaceId: string, docId: string) {
+  const res = await fetch(`${API_BASE}/api/v1/documents/${docId}`, {
+    method: "DELETE",
+    headers: { "X-Workspace-Id": workspaceId },
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.detail || "Failed to delete document");
+  }
+  return data;
+}
+
 export async function fetchDocumentPreview(workspaceId: string, docId: string): Promise<DocumentPreview> {
   const res = await fetch(`${API_BASE}/api/v1/documents/${docId}/preview`, { headers: { "X-Workspace-Id": workspaceId } });
   if (!res.ok) throw new Error("Failed to load document preview");
