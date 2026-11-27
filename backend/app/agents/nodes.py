@@ -142,6 +142,8 @@ async def generate_answer_node(state: AgentState) -> dict:
     chunks = state.get("retrieved_chunks", [])
     valid_chunk_ids = {c["chunk_id"] for c in chunks if c.get("chunk_id")}
 
+    prompt_version = 0
+
     if route == "direct":
         system_prompt = (
             "You are AnchorDocs, a helpful technical knowledge assistant. "
@@ -163,6 +165,7 @@ async def generate_answer_node(state: AgentState) -> dict:
     else:
         versioned_prompt = get_versioned_prompt('anchordocs-grounded-qa', label='production')
         system_prompt = versioned_prompt.template
+        prompt_version = versioned_prompt.version
         context_block = "\n\n".join(
             f"[chunk_id: {c['chunk_id']} | file: {c['filename']} | page: {c['page']}]\n{c['content']}"
             for c in chunks
@@ -190,7 +193,8 @@ async def generate_answer_node(state: AgentState) -> dict:
         metadata={
             "trace_name": "agent-generator",
             "workspace_id": state["workspace_id"],
-            "route": route, "prompt_version":versioned_prompt.version
+            "route": route,
+            "prompt_version": prompt_version,
         },
     )
 

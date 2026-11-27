@@ -16,8 +16,14 @@ from app.agents.nodes import (
     generate_answer_node,
 )
 from app.core.config import get_settings
+import asyncio
+import os
+import sys
 
 settings = get_settings()
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 # Global pool & compiled graph initialized cleanly at FastAPI startup
@@ -80,20 +86,32 @@ def _build_workflow() -> StateGraph:
 
 
 async def init_agent_graph():
-    """called once on fastapi startup: creates checkpoint tables automatically in supabase."""
+    """Initialize persistent checkpoints when available; otherwise start with memory-only state."""
     global _db_pool, _compiled_graph
-    _db_pool = AsyncConnectionPool(
-        conninfo=settings.SUPABASE_DB_URL,
-        min_size=1,
-        max_size=3,
-        kwargs={'autocommit':True, 'prepare_threshold': 0}
-    )
-    await _db_pool.open()
 
-    checkpointer = AsyncPostgresSaver(_db_pool)
-    await checkpointer.setup() # automatically creates langgraph checkpoint tables
+    if sys.platform == "win32":
+        print("Warning: PostgreSQL checkpoints disabled on Windows local development")
+        _compiled_graph = _build_workflow().compile()
+        return
 
-    _compiled_graph = _build_workflow().compile(checkpointer=checkpointer)
+    try:
+        _db_pool = AsyncConnectionPool(
+            conninfo=settings.SUPABASE_DB_URL,
+            min_size=1,
+            max_size=3,
+            kwargs={'autocommit': True, 'prepare_threshold': 0},
+        )
+        await _db_pool.open()
+
+        checkpointer = AsyncPostgresSaver(_db_pool)
+        await checkpointer.setup()
+        _compiled_graph = _build_workflow().compile(checkpointer=checkpointer)
+    except Exception as exc:
+        if _db_pool:
+            await _db_pool.close()
+            _db_pool = None
+        print(f"Warning: PostgreSQL checkpoint unavailable; starting without persistence: {exc}")
+        _compiled_graph = _build_workflow().compile()
 
 async def close_agent_graph():
     """cleanly closes postgres pool on shutdown"""

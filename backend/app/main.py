@@ -18,11 +18,15 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app:FastAPI):
-    await init_agent_graph()
+    try:
+        import asyncio
+        await asyncio.wait_for(init_agent_graph(), timeout=5)
+    except asyncio.TimeoutError:
+        print("Warning: PostgreSQL startup timed out; continuing without persistent checkpoints")
+    except Exception as exc:
+        print(f"Warning: agent graph startup failed; continuing without persistent checkpoints: {exc}")
     yield
     await close_agent_graph()
-
-
 
 app = FastAPI(title=settings.APP_NAME, version='0.4.0', lifespan=lifespan)
 
