@@ -235,3 +235,12 @@ async def remove_document(
             status_code=404, detail="Document not found in workspace.")
     return {"status": "deleted", "doc_id": doc_id}
 
+@app.get('/')
+async def root():
+    return {
+        'service': settings.APP_NAME,
+        'status': 'ok',
+        'health': '/health',
+        'api_docs': '/docs',
+    }
+
