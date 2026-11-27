@@ -178,14 +178,29 @@ Run evals whenever prompts, models, chunking, retrieval settings, or guardrails 
 
 ## Screenshots
 
- images will be added to `docs/screenshots/` and  placeholder will be replaced by paths below when they are available.
+### Document workspace
 
-| Area | Screenshot |
-| --- | --- |
-| Document workspace | `![Document workspace](docs/screenshots/document-workspace.png)` |
-| Grounded Q&A with citations | `![Cited answer](docs/screenshots/cited-answer.png)` |
-| Safety or review state | `![Guardrail result](docs/screenshots/guardrail-result.png)` |
-| Evaluation dashboard | `![Evaluation dashboard](docs/screenshots/evaluations.png)` |
+![AnchorDocs document workspace](docs/screenshots/document-workspace.png)
+
+The workspace combines recent conversations, uploaded documents, and the document-grounded chat experience.
+
+### Grounded Q&A with citations
+
+![AnchorDocs grounded answer with sources](docs/screenshots/cited-answer.png)
+
+Answers include supporting source passages and source citations from the uploaded document.
+
+### Safety or review state
+
+![AnchorDocs safety checks](docs/screenshots/guardrail-result.png)
+
+Safety checks appear alongside the generated answer so reviewers can verify that the response passed the configured controls.
+
+### Evaluation and observability dashboard
+
+![AnchorDocs evaluation dashboard](docs/screenshots/evaluations-dashboard.png)
+
+The dashboard visualizes trace activity, model usage, cost, and observability metrics across the application.
 
 ## Getting started
 
