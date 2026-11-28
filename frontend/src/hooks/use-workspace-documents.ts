@@ -36,9 +36,14 @@ export function useWorkspaceDocuments(workspaceId: string) {
         if (cancelled) return;
         setStore({ workspaceId, documents, status: "ready" });
       })
-      .catch(() => {
+      .catch((loadFailure) => {
         if (cancelled) return;
         setStore({ workspaceId, documents: [], status: "error" });
+        setUploadError(
+          loadFailure instanceof Error
+            ? loadFailure.message
+            : "Documents could not be loaded.",
+        );
       });
 
     return () => {
@@ -64,18 +69,34 @@ export function useWorkspaceDocuments(workspaceId: string) {
       setUploading(true);
       setUploadError(null);
       try {
-        await uploadDocument(workspaceId, file);
+        try {
+          await uploadDocument(workspaceId, file);
+        } catch (uploadFailure) {
+          const message =
+            uploadFailure instanceof Error
+              ? uploadFailure.message
+              : "The upload failed.";
+          setUploadError(
+            message.includes("timed out")
+              ? `${message} The upload may still finish; refresh the document list before retrying.`
+              : message,
+          );
+          return;
+        }
+
         const documentsAfterUpload = await fetchDocuments(workspaceId);
         setStore({
           workspaceId,
           documents: documentsAfterUpload,
           status: "ready",
         });
-      } catch (uploadFailure) {
+      } catch (refreshFailure) {
         setUploadError(
-          uploadFailure instanceof Error
-            ? uploadFailure.message
-            : "The upload failed.",
+          `Upload completed, but the document list could not be refreshed. ${
+            refreshFailure instanceof Error
+              ? refreshFailure.message
+              : "Please refresh the document list."
+          }`,
         );
       } finally {
         setUploading(false);

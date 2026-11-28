@@ -1,4 +1,39 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_TIMEOUT_MS = 30_000;
+const UPLOAD_TIMEOUT_MS = 120_000;
+
+async function apiFetch(
+  url: string,
+  init: RequestInit,
+  timeoutMs = API_TIMEOUT_MS,
+) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } catch {
+    if (controller.signal.aborted) {
+      throw new Error("The request timed out. The document service may be unavailable.");
+    }
+    throw new Error("Could not connect to the document service. Please try again later.");
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function responseError(res: Response, fallback: string) {
+  try {
+    const data = await res.json();
+    const detail = data.detail;
+    if (typeof detail === "string") return detail;
+    if (typeof detail?.error === "string") return detail.error;
+    if (typeof detail?.reason === "string") return detail.reason;
+  } catch {
+    // Error responses from a proxy may be plain text or HTML.
+  }
+  return `${fallback} (HTTP ${res.status})`;
+}
 
 export interface WorkspaceDoc {
   doc_id: string;
@@ -44,10 +79,11 @@ export interface ChatApiResponse {
 export async function fetchDocuments(
   workspaceId: string,
 ): Promise<WorkspaceDoc[]> {
-  const res = await fetch(`${API_BASE}/api/v1/documents`, {
+  const res = await apiFetch(`${API_BASE}/api/v1/documents`, {
+    cache: "no-store",
     headers: { "X-Workspace-Id": workspaceId },
   });
-  if (!res.ok) throw new Error("Failed to load workspace documents");
+  if (!res.ok) throw new Error(await responseError(res, "Could not load documents"));
   const data = await res.json();
   return data.documents || [];
 }
@@ -56,17 +92,16 @@ export async function uploadDocument(workspaceId: string, file: File) {
   const formData = new FormData();
   formData.append("file", file);
 
-  const res = await fetch(`${API_BASE}/api/v1/documents/upload`, {
+  const res = await apiFetch(`${API_BASE}/api/v1/documents/upload`, {
     method: "POST",
     headers: { "X-Workspace-Id": workspaceId },
     body: formData,
-  });
+  }, UPLOAD_TIMEOUT_MS);
 
-  const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.detail?.error || data.detail || "Upload failed");
+    throw new Error(await responseError(res, "Upload failed"));
   }
-  return data;
+  return res.json();
 }
 
 export async function deleteDocument(workspaceId: string, docId: string) {
