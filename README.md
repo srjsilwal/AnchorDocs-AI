@@ -214,6 +214,16 @@ npm run dev
 
 Then open the local URL reported by the development server. Refer to `frontend/README.md` for frontend-specific commands and configuration.
 
+### Deployment configuration
+
+The frontend calls the FastAPI service from the browser. Before deploying the frontend (for example, on Vercel), set this Production environment variable and redeploy it:
+
+```text
+NEXT_PUBLIC_API_URL=https://your-public-api-domain
+```
+
+Use the public HTTPS URL of the deployed backend, without a trailing slash. `localhost` works only on a developer's computer; using it in a deployed frontend makes document loading and uploads target the visitor's own machine. The backend must also be deployed and healthy at `/health`. If its CORS configuration is restricted, set `FRONTEND_URL` on the backend to the exact deployed frontend origin.
+
 ## Responsible use
 
 AnchorDocs is a decision-support system, not a replacement for legal, medical, financial, compliance, or security professionals. For high-impact decisions, review the cited source material and retain appropriate human approval steps.

@@ -1,4 +1,6 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const configuredApiBase = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/$/, "");
+const API_BASE = configuredApiBase ||
+  (process.env.NODE_ENV === "production" ? null : "http://localhost:8000");
 const API_TIMEOUT_MS = 30_000;
 const UPLOAD_TIMEOUT_MS = 120_000;
 
@@ -7,6 +9,12 @@ async function apiFetch(
   init: RequestInit,
   timeoutMs = API_TIMEOUT_MS,
 ) {
+  if (!API_BASE) {
+    throw new Error(
+      "The deployed app is missing NEXT_PUBLIC_API_URL. Configure it with the public HTTPS URL of the API, then redeploy the frontend.",
+    );
+  }
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -105,7 +113,7 @@ export async function uploadDocument(workspaceId: string, file: File) {
 }
 
 export async function deleteDocument(workspaceId: string, docId: string) {
-  const res = await fetch(`${API_BASE}/api/v1/documents/${docId}`, {
+  const res = await apiFetch(`${API_BASE}/api/v1/documents/${docId}`, {
     method: "DELETE",
     headers: { "X-Workspace-Id": workspaceId },
   });
@@ -118,7 +126,9 @@ export async function deleteDocument(workspaceId: string, docId: string) {
 }
 
 export async function fetchDocumentPreview(workspaceId: string, docId: string): Promise<DocumentPreview> {
-  const res = await fetch(`${API_BASE}/api/v1/documents/${docId}/preview`, { headers: { "X-Workspace-Id": workspaceId } });
+  const res = await apiFetch(`${API_BASE}/api/v1/documents/${docId}/preview`, {
+    headers: { "X-Workspace-Id": workspaceId },
+  });
   if (!res.ok) throw new Error("Failed to load document preview");
   return res.json();
 }
