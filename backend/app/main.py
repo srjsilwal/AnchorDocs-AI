@@ -30,20 +30,6 @@ async def lifespan(app:FastAPI):
 
 app = FastAPI(title=settings.APP_NAME, version='0.4.0', lifespan=lifespan)
 
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        'http://localhost:3000',
-        'https://anchor-docs-ai.vercel.app',
-        settings.FRONTEND_URL,
-    ],
-    allow_origin_regex=r"https://([a-zA-Z0-9-]+\.)*vercel\.app",
-    allow_credentials=True,
-    allow_methods=['*'],
-    allow_headers=['*']
-)
-
 class ChatRequest(BaseModel):
     query: str
     thread_id: str = 'default-thread'
@@ -248,4 +234,18 @@ async def root():
         'health': '/health',
         'api_docs': '/docs',
     }
+
+
+app = CORSMiddleware(
+    app=app,
+    allow_origins=[
+        'http://localhost:3000',
+        'https://anchor-docs-ai.vercel.app',
+        settings.FRONTEND_URL,
+    ],
+    allow_origin_regex=r"https://([a-zA-Z0-9-]+\.)*vercel\.app",
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
 
